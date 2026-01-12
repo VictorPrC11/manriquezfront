@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import Header_homeScreen from "../Components/Header_homeScreen";
 import { apiObtenerClientes } from "../API/api_clientes";
 import type { Cliente } from "../model/clientes_model";
+import RegistroCliente from "./Registro_cliente";
 
 function Home_screen() {
     const [searchTerm, setSearchTerm] = useState('');
     const [people, setPeople] = useState<Cliente[]>([]);
+    const [updateForm, setUpdateForm] = useState(false);
+    const [datos, setDatos] = useState<Cliente>()
     useEffect(() => {
         apiObtenerClientes().then((res: any) => {
-            console.log("Clientes obtenidos para Home Screen:", res.data);
             setPeople(res.data[0]);
         }
         ).catch(error => {
@@ -18,7 +20,11 @@ function Home_screen() {
     const filteredPersons = people.filter((p) =>
         p.nombres.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    return <>
+    if (updateForm){
+        return <RegistroCliente cliente={datos} onClose={()=>setUpdateForm(false)}/>
+    }
+    else{
+       return <>
         <div className="Screen_container">
             <input type="text" placeholder="Busqueda de cliente" className="search_client_input" value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)}/>
             <div className="memberships_expiring_container">
@@ -32,7 +38,11 @@ function Home_screen() {
                     </Header_homeScreen>
                     <div className="memberships_expiring_list">
                         {filteredPersons.map((person, index) =>
-                            <Header_homeScreen key={index} tabla>
+                            <Header_homeScreen key={index} tabla funcion={()=>{
+                                setDatos(person)
+                                setUpdateForm(true);
+
+                            }}>
                                 <h3>{person.nombres} {person.apellido_paterno} {person.apellido_materno}</h3>
                                 <h3 style={{ marginRight: "70px" }}>{person.fecha_nacimiento}</h3>
                             </Header_homeScreen>
@@ -46,5 +56,7 @@ function Home_screen() {
         </div>
 
     </>
+    }
+
 }
 export default Home_screen;

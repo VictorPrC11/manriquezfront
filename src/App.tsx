@@ -10,7 +10,6 @@ import RegistroCliente from './Pages/Registro_cliente';
 function App() {
 
   const [selectedButton, setSelectedButton] = useState("HOME");
-
   const handleButtonClick = (buttonLabel: string) => {
 
     setSelectedButton(buttonLabel);

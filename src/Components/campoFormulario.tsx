@@ -22,7 +22,7 @@ const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelNam
                 <div style={{ height: "8px" }} />
 
                 <div className="form_input" style={{ width: `${ancho}px`, ...estiloInputError }}>
-                    <input type={type} id={id} name={name} value={value} onChange={cambio} />
+                    <input type={type} id={id} name={name} value={value} onChange={cambio}  autoComplete="off"/>
                 </div>
                 {/* Mensaje de error debajo del input */}
                 {error && <span style={{ color: "#ff0000", fontSize: "11px", marginTop: "4px" }}>{error}</span>}
@@ -32,7 +32,7 @@ const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelNam
                 <label htmlFor={id} style={error ? { color: "#ff0000" } : {}}>{labelName}</label>
                 <div style={{ height: "8px" }} />
                 <div className="form_input" style={estiloInputError}>
-                    <input type={type} id={id} name={name} value={value} onChange={cambio} />
+                    <input type={type} id={id} name={name} value={value} onChange={cambio} autoComplete="off"/>
                 </div>
                 {/* Mensaje de error debajo del input */}
                 {error && <span style={{ color: "#ff0000", fontSize: "11px", marginTop: "4px" }}>{error}</span>}
