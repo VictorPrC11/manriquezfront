@@ -4,8 +4,8 @@ export interface MembresiaCliente{
     id_cliente: number;
     id_membresia: number;
     fecha_inicio: string;
-    fecha_fin: string;
-    activo: boolean;
-    pagado: boolean;
+    fecha_fin?: string;
+    activa: number;
+    pagado: number;
     
 }

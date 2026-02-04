@@ -2,10 +2,9 @@ import { useState } from 'react'
 import './App.css'
 import MenuButton from './Components/Menu_Button'
 import Home_screen from './Pages/Home_screen';
-import Clientes_screen from './Pages/Clientes_screen';
+import Pagos from './Pages/Pagos';
 import Costos from './Pages/Costos';
-import RegistroCliente from './Pages/Registro_cliente';
-
+import Clientes from './Pages/Clientes_screen';
 
 function App() {
 
@@ -38,11 +37,15 @@ function App() {
             handleButtonClick("COSTOS")
           }} />
 
-        </div>
+          <MenuButton label='PAGOS' isSelected={selectedButton == "PAGOS" ? true : false} onClick={()=>{
+            handleButtonClick("PAGOS")
+          }} />
 
+        </div>
         {selectedButton === "HOME" && <Home_screen/>}
-        {selectedButton === "CLIENTES" && <Clientes_screen/>}
-        {selectedButton === "COSTOS" && <div/>}
+        {selectedButton === "CLIENTES" && <Clientes/>}
+        {selectedButton === "COSTOS" && <Costos/>}
+        {selectedButton == "PAGOS" && <Pagos/>}
       </div>
     </>
   )

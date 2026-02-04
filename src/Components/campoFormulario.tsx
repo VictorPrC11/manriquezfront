@@ -6,12 +6,14 @@ interface CampoFormularioProps {
     name: string;
     labelName:string;
     ancho?: number;
+    alto?:boolean;
     value?: string;
     cambio?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     error?: string; // Agregamos el parámetro error
+    lectura?:boolean;
 }
 
-const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelName}: CampoFormularioProps) => {
+const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelName, alto, lectura}: CampoFormularioProps) => {
     // Estilo para resaltar el error en el borde del input
     const estiloInputError = error ? { border: "1.5px solid #ff0000" } : {};
 
@@ -20,11 +22,9 @@ const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelNam
             <div className="form_container">
                 <label htmlFor={id} style={error ? { color: "#ff0000" } : {}}>{labelName}</label>
                 <div style={{ height: "8px" }} />
-
-                <div className="form_input" style={{ width: `${ancho}px`, ...estiloInputError }}>
-                    <input type={type} id={id} name={name} value={value} onChange={cambio}  autoComplete="off"/>
+                <div className="form_input" style={{ width: `${ancho}px`, height:alto ? "50px" : undefined, ...estiloInputError }}>
+                    <input readOnly={lectura} type={type} id={id} name={name} value={value} onChange={cambio}  autoComplete="off"/>
                 </div>
-                {/* Mensaje de error debajo del input */}
                 {error && <span style={{ color: "#ff0000", fontSize: "11px", marginTop: "4px" }}>{error}</span>}
             </div>
         ) : (
@@ -32,7 +32,7 @@ const CampoFormulario = ({ type, id, name, ancho, value, cambio, error, labelNam
                 <label htmlFor={id} style={error ? { color: "#ff0000" } : {}}>{labelName}</label>
                 <div style={{ height: "8px" }} />
                 <div className="form_input" style={estiloInputError}>
-                    <input type={type} id={id} name={name} value={value} onChange={cambio} autoComplete="off"/>
+                    <input readOnly={lectura} type={type} id={id} name={name} value={value} onChange={cambio} autoComplete="off"/>
                 </div>
                 {/* Mensaje de error debajo del input */}
                 {error && <span style={{ color: "#ff0000", fontSize: "11px", marginTop: "4px" }}>{error}</span>}

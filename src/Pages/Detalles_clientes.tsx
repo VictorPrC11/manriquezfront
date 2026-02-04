@@ -1,0 +1,140 @@
+import { useEffect, useState } from "react";
+import CampoFormulario from "../Components/campoFormulario";
+import { apiObtenerMembresiasClientes } from "../API/api_membresias_clientes";
+import ImageComponent from "../Components/imageComponent";
+import { apiObtenerDetallesCliente } from "../API/api_clientes";
+import Spinner from "../Components/spinner";
+import IconButton from "../Components/IconButton";
+import Pagos_Cliente from "./Pagos_Cliente";
+import RegistroCliente from "./Registro_cliente";
+import type { Cliente } from "../model/clientes_model";
+
+
+
+
+interface detallesClienteProps {
+    cliente: number;
+    onClose: () => void
+}
+
+const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
+    const ancho = 210;
+    const ancho1 = 300;
+    const [loading, setLoading] = useState(true)
+    const [pagosScreen, setPagosScreen] = useState(false)
+    const [updateScreen, setUpdateScreen] = useState(false)
+    const [form, setForm] = useState({
+        nombres: '',
+        apellido_paterno: '',
+        apellido_materno: '',
+        correo: '',
+        celular: '',
+        fecha_nacimiento: '',
+        direccion: '',
+        membresia: '',
+        vencimiento_membresia: '',
+        vencimiento_inscripcion: ''
+    });
+    const obtenerDatosCliente = (id_cliente:any)=>{
+        apiObtenerDetallesCliente(id_cliente).then((res: any) => {
+            setForm(() => ({
+                nombres: res.data[0][0].nombres,
+                apellido_paterno: res.data[0][0].apellido_paterno,
+                apellido_materno: res.data[0][0].apellido_materno,
+                correo: res.data[0][0].correo ? res.data[0][0].correo : "",
+                celular: res.data[0][0].celular ? res.data[0][0].celular : "",
+                fecha_nacimiento: res.data[0][0].fecha_nacimiento ? res.data[0][0].fecha_nacimiento : "",
+                direccion: res.data[0][0].direccion ? res.data[0][0].direccion : "",
+                membresia: res.data[0][0].nombre ? res.data[0][0].nombre  : "Sin membresia",
+                vencimiento_membresia: res.data[0][0].vencimiento_membresia ? res.data[0][0].vencimiento_membresia : "Sin datos",
+                vencimiento_inscripcion: res.data[0][0].vencimiento_inscripcion ? res.data[0][0].vencimiento_inscripcion : "Sin datos"
+            }));
+            setLoading(false);
+        }).catch((error) => {
+            console.warn("error: " + error)
+        })
+    }
+
+    useEffect(() => {
+        obtenerDatosCliente(cliente)
+    }, [cliente]);
+    if (pagosScreen) {
+        return <Pagos_Cliente onclose={() => setPagosScreen(false)} cliente={{
+            id_cliente: cliente,
+            nombre_cliente: `${form.nombres} ${form.apellido_paterno} ${form.apellido_materno}`
+        }} />
+    }
+    if(updateScreen){
+        const dataCliente:Cliente = {
+            nombres: form.nombres,
+            apellido_paterno: form.apellido_paterno,
+            apellido_materno: form.apellido_materno,
+            correo: form.correo ? form.correo : "",
+            direccion:form.direccion ? form.direccion : "",
+            celular:form.celular,
+            fecha_nacimiento: form.fecha_nacimiento,
+            fecha_registro: ""
+        }
+        return <RegistroCliente cliente={dataCliente} onClose={()=>{
+            obtenerDatosCliente(cliente)
+            setUpdateScreen(false)
+        }}/>
+    }
+    else {
+        return loading ? <div className="spinner_container"><Spinner /></div> :
+            <div className='Main-Container'>
+                <h1 style={{ marginBottom: "50px" }}>DATOS CLIENTE</h1>
+                <div className="row">
+                    <div className='column'>
+                        <div className='row-1'>
+                            <CampoFormulario lectura labelName="Nombre" name='nombres' id='1' type='text' ancho={ancho1} value={`${form.nombres} ${form.apellido_paterno} ${form.apellido_materno}`} />
+                            <CampoFormulario lectura labelName='Celular' name='celular' id='2' type='text' ancho={ancho} value={form.celular} />
+                            <CampoFormulario lectura labelName='Fecha de nacimiento' name='fecha_nacimiento' id='3' type='date' ancho={ancho} value={form.fecha_nacimiento} />
+                        </div>
+                        <div className="separador" />
+                        <div className='row-1'>
+                            <CampoFormulario lectura labelName="Correo" name='correo' id='4' type='text' ancho={ancho1} value={form.correo} />
+                            <CampoFormulario lectura labelName='Membresia' name='membresia' id='5' type='text' ancho={ancho} value={form.membresia} />
+                            <CampoFormulario lectura labelName='Vencimiento' name='vencimiento_membresia' id='6' type='text' ancho={ancho} value={form.vencimiento_membresia} />
+                        </div>
+                        <div className="separador" />
+                        <div className='row-1'>
+                            <CampoFormulario lectura labelName='Dirección' name='direccion' id='7' type='text' ancho={ancho1 + ancho + 20} value={form.direccion} />
+                            <CampoFormulario lectura labelName='Inscripción' name='vencimiento_inscripcion' id='8' type='text' ancho={ancho} value={form.vencimiento_inscripcion} />
+                        </div>
+                    </div>
+                    <div style={{ width: "30px" }} />
+                    <div className="column">
+
+                        <ImageComponent width={210} height={250} src='undefined' />
+                        <div className="row-1">
+                            <IconButton
+                                icono={<img src={'src/assets/editar.png'} />}
+                                funcion={() => {
+                                    setUpdateScreen(true)
+                                }}
+                            />
+                            <IconButton
+                                icono={<img src={'src/assets/borrar.png'} />}
+                                funcion={() => {
+                                }}
+                            />
+                            <button className="textButton" onClick={() => setPagosScreen(true)}><label>Pagos</label></button>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div style={{ marginTop: "40px", display: "flex", justifyContent: "center", width: "100%", flex: "1" }}>
+                    <button type='button' className='cancel' onClick={onClose}>Cancelar</button>
+                </div>
+
+            </div>
+    }
+
+}
+
+
+
+
+export default Detalles_cliente;
