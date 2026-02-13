@@ -10,7 +10,9 @@ interface RegistroClienteProps {
 const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
     const [cobroScreen, setCobroScreen] = useState(false);
     const [idCliente, setIdCliente] = useState<any>(0);
+    const [preview, setPreview] = useState<string | null>(null);
     const ancho = 300;
+
     const [form, setForm] = useState({
         nombres: ''.trim(),
         apellido_paterno: ''.trim(),
@@ -20,7 +22,9 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
         fecha_nacimiento: '',
         direccion: ''.trim(),
         fecha_registro: '',
+        foto: null as File | null
     });
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm({
@@ -28,21 +32,35 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             [name]: value   // Actualiza solo el campo que cambió
         });
     };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setForm({ ...form, foto: file });
+            setPreview(URL.createObjectURL(file)); // Crea vista previa temporal
+        }
+    };
+
     const [errors, setErrors] = useState({
         nombres: '',
         apellido_paterno: '',
         apellido_materno: '',
         fecha_nacimiento: '',
-        celular: ''
+        celular: '',
+        direccion: ''
     });
+
     const validarCampos = () => {
         let nuevosErrores = {
             nombres: '',
             apellido_paterno: '',
             apellido_materno: '',
             fecha_nacimiento: '',
-            celular: ''
+            celular: '',
+            direccion: '',
+            foto: ''
         };
+
         let esValido = true;
 
         if (!form.nombres.trim()) {
@@ -67,16 +85,32 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             esValido = false;
         }
 
+        if (!form.direccion.trim()) {
+            nuevosErrores.direccion = 'Obligatorio';
+            esValido = false;
+        }
 
         setErrors(nuevosErrores);
         return esValido;
     };
+
     const enviarForm = (e: any) => {
         e.preventDefault()
         const formulario_correcto = validarCampos();
         if (formulario_correcto) {
+            const hoy = new Date();
+            const zonaHorariaOffset = hoy.getTimezoneOffset() * 60000;
+            const fechaFormateada = new Date(hoy.getTime() - zonaHorariaOffset).toISOString().split('T')[0];
+            form.fecha_registro = fechaFormateada;
             if (formulario_correcto && !cliente && confirm("¿Los datos son correctos?")) {
-                apiCrearCliente(form)
+                const formData = new FormData();
+                Object.entries(form).forEach(([key, value]) => {
+                    if (value !== null) {
+                        console.log(key, value);
+                        formData.append(key, value);
+                    }
+                });
+                apiCrearCliente(formData)
                     .then((res: any) => {
                         alert("Cliente creado exitosamente");
                         const id = Number(res.data);
@@ -88,6 +122,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
                     });
             }
         }
+
         if (cliente) {
             apiActualizarCliente(cliente.id_cliente, form).then(() => {
                 if (onClose) onClose();
@@ -98,6 +133,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
         }
 
     }
+
     useEffect(() => {
         if (cliente) {
             setForm({
@@ -108,11 +144,12 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
                 celular: cliente.celular,
                 correo: cliente.correo ? cliente.correo : "",
                 direccion: cliente.direccion,
-                fecha_registro: cliente.fecha_registro
-
+                fecha_registro: cliente.fecha_registro,
+                foto: null
             });
         }
     }, [cliente]);
+
     if (cobroScreen) {
         return <Pago_cliente cambio={() => {
             if (onClose) {
@@ -121,6 +158,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             setCobroScreen(false)
         }} cliente={form} id_cliente={idCliente!} />
     }
+
     return <div className='Main-Container'>
         {cliente ? <h1 style={{ marginBottom: "50px" }}>ACTUALIZACION DE CLIENTE</h1> : <h1 style={{ marginBottom: "50px" }}>REGISTRO DE CLIENTE</h1>}
         <form onSubmit={enviarForm}>
@@ -137,7 +175,8 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             </div>
             <div className='separador'></div>
             <div className='contenedor-3'>
-                <CampoFormulario labelName='Dirección' name='direccion' id='7' type='text' ancho={ancho + 840} cambio={(e) => handleChange(e)} value={form.direccion} />
+                <CampoFormulario labelName='Dirección' name='direccion' id='7' type='text' ancho={ancho + 300} cambio={(e) => handleChange(e)} value={form.direccion} error={errors.direccion} />
+                <CampoFormulario labelName='Foto' name='foto' id='8' type='file' ancho={ancho + 220} cambio={(e) => handleFileChange(e)} />
             </div>
             <div style={{ marginTop: "40px", display: "flex", justifyContent: "center", width: "100%", flex: "1" }}>
                 <button type='button' className='cancel' onClick={() => {
@@ -147,6 +186,12 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
                 <button className='enviar-form' type='submit'>Guardar</button>
             </div>
         </form>
+        {preview && (
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <h3>Vista previa de la foto seleccionada:</h3>
+                <img src={preview} alt="Vista previa" style={{ maxWidth: "200px", maxHeight: "200px" }} />
+            </div>
+        )}
 
     </div>
 }

@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react';
 import Header_table_clients from '../Components/Header_table_clients';
-import IconButton from '../Components/IconButton';
 import { api_obtenerPagos } from '../API/api_pagos';
 import type { Pago } from '../model/pago';
-import Pago_cliente from './Pago_cliente';
 import Spinner from '../Components/spinner';
 import ImageComponent from '../Components/imageComponent';
 import noPageFound from '../assets/page-not-found.png'
 const Pagos = ()=>{
     const [searchTerm, setSearchTerm] = useState('');
     const [pagos, setPagos] = useState<Pago[]>();
-    const [generaPagoForm, setGenerarPagoForm] = useState(false); 
     const [loading, setLoading] = useState(true)
     useEffect(() => {
         api_obtenerPagos().then((res: any) => {

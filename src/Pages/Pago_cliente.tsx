@@ -16,7 +16,7 @@ interface OptionType {
 
 interface PagoProp {
     cambio: () => void;
-    cliente?: Cliente;
+    cliente?: any;
     id_cliente: number;
 }
 

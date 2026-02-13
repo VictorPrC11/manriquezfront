@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Header_homeScreen from "../Components/Header_homeScreen";
-import { apiObtenerClientes, apiVencimientoMembresiasClientes } from "../API/api_clientes";
-import type { Cliente } from "../model/clientes_model";
+import { apiVencimientoMembresiasClientes } from "../API/api_clientes";
 import Detalles_cliente from "./Detalles_clientes";
 import Spinner from "../Components/spinner";
 import ImageComponent from "../Components/imageComponent";
@@ -17,6 +16,17 @@ function Home_screen() {
     const [totalRecords, setTotalRecords] = useState(0)
     const pageSize = 10
     const totalPages = Math.ceil(totalRecords / pageSize);
+    const handleNext = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
     useEffect(() => {
         const offset = (currentPage - 1) * pageSize;
         const parameters = {
@@ -25,7 +35,9 @@ function Home_screen() {
         }
         console.log(parameters)
         apiVencimientoMembresiasClientes(parameters).then((res: any) => {
-            setPeople(res.data[0]);
+            const data = res.data[0] || [];
+            setPeople(data);
+            setTotalRecords(res.data[1][0].total)
             setDataLoaded(true)
         }
 
@@ -34,9 +46,8 @@ function Home_screen() {
 
         }).finally(() => setDataLoaded(true));
     }, [])
-    const handlerEnter = (e:any)=>{
-        if(e.key === 'Enter')
-        {
+    const handlerEnter = (e: any) => {
+        if (e.key === 'Enter') {
             console.log("FUNCIONA CORRECTAMENTE")
         }
     }
@@ -71,13 +82,28 @@ function Home_screen() {
 
 
                                             }}>
-                                                <h3 style={{fontWeight:"normal"}}>{person.nombre_cliente}</h3>
-                                                <h3 style={{ marginRight: "70px",fontWeight:"normal" }}>{person.fecha_fin}</h3>
+                                                <h3 style={{ fontWeight: "normal" }}>{person.nombre_cliente}</h3>
+                                                <h3 style={{ marginRight: "70px", fontWeight: "normal" }}>{person.fecha_fin}</h3>
                                             </Header_homeScreen>
                                         ) : <h3>Sin membresias asignadas a clientes</h3>
                                     }
 
                                 </div>
+                                {totalPages > 1 ? (
+                                    <div className="pagination_container">
+                                        {currentPage > 1 && (
+                                            <button onClick={handlePrev}>
+                                                Anterior
+                                            </button>
+                                        )}
+
+                                        {currentPage < totalPages && (
+                                            <button onClick={handleNext}>
+                                                Siguiente
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : null}
                             </div>
                             <div className="estadisticas_clientes" />
                         </div>

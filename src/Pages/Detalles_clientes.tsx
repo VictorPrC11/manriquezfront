@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import CampoFormulario from "../Components/campoFormulario";
-import { apiObtenerMembresiasClientes } from "../API/api_membresias_clientes";
 import ImageComponent from "../Components/imageComponent";
-import { apiObtenerDetallesCliente } from "../API/api_clientes";
+import { apiEliminarCliente, apiObtenerDetallesCliente } from "../API/api_clientes";
 import Spinner from "../Components/spinner";
 import IconButton from "../Components/IconButton";
 import Pagos_Cliente from "./Pagos_Cliente";
 import RegistroCliente from "./Registro_cliente";
 import type { Cliente } from "../model/clientes_model";
-
+import editar from '../assets/editar.png'
+import borrar from '../assets/borrar.png'
 
 
 
@@ -17,6 +17,7 @@ interface detallesClienteProps {
     onClose: () => void
 }
 
+const URL_BASE = "http://localhost:3000/uploads/";
 const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
     const ancho = 210;
     const ancho1 = 300;
@@ -33,26 +34,39 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
         direccion: '',
         membresia: '',
         vencimiento_membresia: '',
-        vencimiento_inscripcion: ''
+        vencimiento_inscripcion: '',
+        foto: ''
     });
-    const obtenerDatosCliente = (id_cliente:any)=>{
+
+    const obtenerDatosCliente = (id_cliente: any) => {
         apiObtenerDetallesCliente(id_cliente).then((res: any) => {
             setForm(() => ({
-                nombres: res.data[0][0].nombres,
-                apellido_paterno: res.data[0][0].apellido_paterno,
-                apellido_materno: res.data[0][0].apellido_materno,
+                nombres: res.data[0][0].nombres ? res.data[0][0].nombres : "",
+                apellido_paterno: res.data[0][0].apellido_paterno ? res.data[0][0].apellido_paterno : "",
+                apellido_materno: res.data[0][0].apellido_materno ? res.data[0][0].apellido_materno : "",
                 correo: res.data[0][0].correo ? res.data[0][0].correo : "",
                 celular: res.data[0][0].celular ? res.data[0][0].celular : "",
                 fecha_nacimiento: res.data[0][0].fecha_nacimiento ? res.data[0][0].fecha_nacimiento : "",
                 direccion: res.data[0][0].direccion ? res.data[0][0].direccion : "",
-                membresia: res.data[0][0].nombre ? res.data[0][0].nombre  : "Sin membresia",
-                vencimiento_membresia: res.data[0][0].vencimiento_membresia ? res.data[0][0].vencimiento_membresia : "Sin datos",
-                vencimiento_inscripcion: res.data[0][0].vencimiento_inscripcion ? res.data[0][0].vencimiento_inscripcion : "Sin datos"
+                membresia: res.data[0][0].nombre ? res.data[0][0].nombre : "No asignada",
+                vencimiento_membresia: res.data[0][0].vencimiento_membresia ? res.data[0][0].vencimiento_membresia : "Sin vencimiento",
+                vencimiento_inscripcion: res.data[0][0].vencimiento_inscripcion ? res.data[0][0].vencimiento_inscripcion : "Sin inscripcion",
+                foto: res.data[0][0].foto ? `${URL_BASE}${res.data[0][0].foto}` : "undefined"
             }));
             setLoading(false);
         }).catch((error) => {
             console.warn("error: " + error)
         })
+    }
+    const handleDelete = async (id_cliente: number) => {
+        if (id_cliente && confirm(`¿Eliminar a ${form.nombres} ${form.apellido_paterno} ${form.apellido_materno}?`)) {
+            try {
+                await apiEliminarCliente(id_cliente);
+                onClose();
+            } catch (error: any) {
+                alert(error.message);
+            }
+        }
     }
 
     useEffect(() => {
@@ -64,21 +78,21 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
             nombre_cliente: `${form.nombres} ${form.apellido_paterno} ${form.apellido_materno}`
         }} />
     }
-    if(updateScreen){
-        const dataCliente:Cliente = {
+    if (updateScreen) {
+        const dataCliente: Cliente = {
             nombres: form.nombres,
             apellido_paterno: form.apellido_paterno,
             apellido_materno: form.apellido_materno,
             correo: form.correo ? form.correo : "",
-            direccion:form.direccion ? form.direccion : "",
-            celular:form.celular,
+            direccion: form.direccion ? form.direccion : "",
+            celular: form.celular,
             fecha_nacimiento: form.fecha_nacimiento,
             fecha_registro: ""
         }
-        return <RegistroCliente cliente={dataCliente} onClose={()=>{
+        return <RegistroCliente cliente={dataCliente} onClose={() => {
             obtenerDatosCliente(cliente)
             setUpdateScreen(false)
-        }}/>
+        }} />
     }
     else {
         return loading ? <div className="spinner_container"><Spinner /></div> :
@@ -106,18 +120,17 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
                     <div style={{ width: "30px" }} />
                     <div className="column">
 
-                        <ImageComponent width={210} height={250} src='undefined' />
+                        <ImageComponent width={210} height={250} src={form.foto} />
                         <div className="row-1">
                             <IconButton
-                                icono={<img src={'src/assets/editar.png'} />}
+                                icono={<img src={editar} alt="Editar" />}
                                 funcion={() => {
                                     setUpdateScreen(true)
                                 }}
                             />
                             <IconButton
-                                icono={<img src={'src/assets/borrar.png'} />}
-                                funcion={() => {
-                                }}
+                                icono={<img src={borrar} alt="Borrar" />}
+                                funcion={() => handleDelete(cliente)}
                             />
                             <button className="textButton" onClick={() => setPagosScreen(true)}><label>Pagos</label></button>
                         </div>
@@ -125,7 +138,9 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
                     </div>
 
                 </div>
-                <div style={{ marginTop: "40px", display: "flex", justifyContent: "center", width: "100%", flex: "1" }}>
+                <div style={{ marginTop: "40px", display: "flex", justifyContent: "center", width: "100%", flex: "1", gap:"20px"}}>
+                    {form.vencimiento_membresia !== 'Sin vencimiento' ? null : <button className="enviar-form">Renovar membresia</button> }
+                    {form.vencimiento_inscripcion !== 'Sin inscripcion' ? null : <button className="textButton">Renovar inscripcion</button>}
                     <button type='button' className='cancel' onClick={onClose}>Cancelar</button>
                 </div>
 

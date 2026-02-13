@@ -8,7 +8,9 @@ import Spinner from '../Components/spinner';
 import ImageComponent from '../Components/imageComponent';
 import noPageFound from '../assets/page-not-found.png';
 import Detalles_cliente from './Detalles_clientes';
-
+import details from '../assets/details.png'
+import editar from '../assets/editar.png'
+import borrar from '../assets/borrar.png'
 const Clientes = () => {
     // 1. Inicializamos como array vacío [] para evitar el uso de "!"
     const [persons, setPersons] = useState<Cliente[]>();
@@ -129,16 +131,16 @@ const Clientes = () => {
                             <h3 style={{fontWeight:"normal"}}>{person.fecha_nacimiento}</h3>
                             <div className='buttons_container'>
                                 <IconButton 
-                                icono={<img src={'src/assets/details.png'} alt="View" />} 
+                                icono={<img src={details} alt="View" />} 
                                 funcion={() => {
                                     setView({mode:'details', data: person})
                                 }} />
                                 <IconButton
-                                    icono={<img src={'src/assets/editar.png'} alt="Edit" />}
+                                    icono={<img src={editar} alt="Edit" />}
                                     funcion={() => setView({ mode: 'form', data: person })}
                                 />
                                 <IconButton
-                                    icono={<img src={'src/assets/borrar.png'} alt="Delete" />}
+                                    icono={<img src={borrar} alt="Delete" />}
                                     funcion={() => handleDelete(person)}
                                 />
                             </div>

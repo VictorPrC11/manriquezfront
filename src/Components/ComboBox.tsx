@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import Select, { type SingleValue } from 'react-select';
 
 // 1. Definimos la interfaz para nuestras opciones

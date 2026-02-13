@@ -8,7 +8,7 @@ interface Props {
   funcion?: ()=>void
 }
 
-const Header_homeScreen = ({ tabla = false, children, clienteData, funcion}: Props) => {
+const Header_homeScreen = ({ tabla = false, children, funcion}: Props) => {
   return !tabla ? (
     <div className="header_homeScreen">{children}</div>
   ) : (

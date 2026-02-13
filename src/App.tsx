@@ -5,7 +5,7 @@ import Home_screen from './Pages/Home_screen';
 import Pagos from './Pages/Pagos';
 import Costos from './Pages/Costos';
 import Clientes from './Pages/Clientes_screen';
-
+import logoManriquez from './assets/Logo.png'
 function App() {
 
   const [selectedButton, setSelectedButton] = useState("HOME");
@@ -20,7 +20,7 @@ function App() {
       <div className='background-overlay'>
         <div className='App'>
 
-            <img src='src/assets/Logo.png' className='main-logo' alt='Logo Manriquez Gym' />
+            <img src={logoManriquez} className='main-logo' alt='Logo Manriquez Gym' />
 
           <MenuButton label='HOME' isSelected={selectedButton == "HOME" ? true : false} onClick={
             () => {

@@ -11,7 +11,7 @@ export interface Cliente{
     direccion?: string;
     fecha_registro: string;
     activo?: boolean;
-    
+    foto?: null | File;
 }
 
 
