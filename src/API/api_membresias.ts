@@ -22,3 +22,6 @@ export const apiObtenerInscripcion = async ()=> {
     const response = await axios.get(`${API_URL}/membresias/obtenerInscripcion`);
     return response.data;
 }
+export const apiRegistrarClienteTBInscripciones = async(inscripcion:Inscripcion)=>{
+     await axios.post(`${API_URL}/inscripciones/registrarEnTBInscripciones`, inscripcion )
+}

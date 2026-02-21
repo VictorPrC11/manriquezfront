@@ -11,3 +11,11 @@ export const apiCrearMembresiaCliente = async(membresiaClienteObj: MembresiaClie
     const response = await axios.post(`${API_URL}/membresiasCliente/crearMembresia`, membresiaClienteObj)
     return response.data;
 }
+export const apiActualizarInscripcionCliente = async(membresiaClienteObj: MembresiaCliente)=>{
+    const response = await axios.put(`${API_URL}/membresiasCliente/actualizarInscripcion/`, membresiaClienteObj)
+    return response.data;
+}
+export const apiActualizarMembresiaCliente = async(membresiaClienteObj: MembresiaCliente)=>{
+    const response = await axios.put(`${API_URL}/membresiasCliente/actualizarMembresia/`, membresiaClienteObj)
+    return response.data;
+}

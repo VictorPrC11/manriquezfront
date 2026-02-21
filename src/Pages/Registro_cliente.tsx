@@ -106,7 +106,6 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
                 const formData = new FormData();
                 Object.entries(form).forEach(([key, value]) => {
                     if (value !== null) {
-                        console.log(key, value);
                         formData.append(key, value);
                     }
                 });
@@ -155,8 +154,9 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             if (onClose) {
                 onClose()
             }
+            
             setCobroScreen(false)
-        }} cliente={form} id_cliente={idCliente!} />
+        }} cliente={form} id_cliente={idCliente!} typeScreen={"REGISTRO"} />
     }
 
     return <div className='Main-Container'>
