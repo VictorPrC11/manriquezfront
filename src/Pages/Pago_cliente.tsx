@@ -39,10 +39,10 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
     const ancho = 250;
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setDatos({
-            ...datos,        // Copia lo que ya estaba en el form
-            [name]: value   // Actualiza solo el campo que cambió
-        });
+        setDatos(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
     const [datos, setDatos] = useState(
         {
@@ -60,10 +60,10 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         }
     )
     const handleSelectChange = (name: string, selection: SingleValue<OptionType>) => {
-        setDatos({
-            ...datos,
+        setDatos(prev => ({
+            ...prev,
             [name]: selection ? selection.value : ""
-        });
+        }));
     };
 
     useEffect(() => {
