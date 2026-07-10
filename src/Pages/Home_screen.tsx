@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Header_homeScreen from "../Components/Header_homeScreen";
-import { apiVencimientoMembresiasClientes } from "../API/api_clientes";
+import { apiClientesActivos, apiMetricasClientes, apiVencimientoMembresiasClientes } from "../API/api_clientes";
 import Detalles_cliente from "./Detalles_clientes";
 import Spinner from "../Components/spinner";
 import ImageComponent from "../Components/imageComponent";
@@ -14,6 +14,15 @@ function Home_screen() {
     const [dataLoaded, setDataLoaded] = useState(false)
     const [currentPage, setCurrentPage] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0)
+    const [metricas, setMetricas] = useState({
+        mes_actual: 0,
+        crecimiento: "0%",
+        mes_anterior: 0
+    });
+
+    const [activo, setActivos] = useState({
+        mes_actual: 0
+    });
     const pageSize = 10
     const totalPages = Math.ceil(totalRecords / pageSize);
     const handleNext = () => {
@@ -27,13 +36,21 @@ function Home_screen() {
             setCurrentPage(prev => prev - 1);
         }
     };
+
     useEffect(() => {
         const offset = (currentPage - 1) * pageSize;
         const parameters = {
             p_pageSize: pageSize,
             p_offset: offset
         }
-        console.log(parameters)
+        apiMetricasClientes().then((res: any) => {
+            const metrica = res.data[0]
+            setMetricas(metrica[0])
+        })
+        apiClientesActivos().then((res: any) => {
+            const activos = res.data[0]
+            setActivos(activos[0])
+        })
         apiVencimientoMembresiasClientes(parameters).then((res: any) => {
             const data = res.data[0] || [];
             setPeople(data);
@@ -48,9 +65,11 @@ function Home_screen() {
     }, [])
     const handlerEnter = (e: any) => {
         if (e.key === 'Enter') {
-            console.log("FUNCIONA CORRECTAMENTE")
+
         }
     }
+
+
     const filteredPersons = people?.filter((p: any) =>
         p.nombre_cliente.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -58,62 +77,73 @@ function Home_screen() {
         //return <RegistroCliente cliente={datos} onClose={()=>setUpdateForm(false)}/>
         return <Detalles_cliente onClose={() => setDetallesForm(false)} cliente={datos!} />
     }
-    else {
-        return <>{
-            !dataLoaded ? <div className="spinner_container"><Spinner /></div> :
-                people?.length !== undefined ?
-                    <div className="Screen_container">
-                        <input type="text" placeholder="Busqueda de cliente" className="search_client_input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={handlerEnter} />
-                        <div className="memberships_expiring_container">
-                            <div>
-                                <Header_homeScreen>
-                                    <h3>Proximas membresias a vencer</h3>
-                                </Header_homeScreen>
-                                <Header_homeScreen tabla funcion={() => console.log(people.length)}>
-                                    <h3>Nombre</h3>
-                                    <h3>Fecha de vencimiento</h3>
-                                </Header_homeScreen>
-                                <div className="memberships_expiring_list">
-                                    {
-                                        filteredPersons?.length !== 0 ? filteredPersons?.map((person: any, index: any) =>
-                                            <Header_homeScreen key={index} tabla funcion={() => {
-                                                setDatos(person.id_cliente)
-                                                setDetallesForm(true);
+    return <>{
+        !dataLoaded ? <div className="spinner_container"><Spinner /></div> :
+            people?.length !== undefined ?
+                <div className="Screen_container">
+                    <input type="text" placeholder="Busqueda de cliente" className="search_client_input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={handlerEnter} />
+                    <div className="memberships_expiring_container">
+                        <div>
+                            <Header_homeScreen>
+                                <h3>Proximas membresias a vencer</h3>
+                            </Header_homeScreen>
+                            <Header_homeScreen tabla funcion={() => console.log(people.length)}>
+                                <h3>Nombre</h3>
+                                <h3>Fecha de vencimiento</h3>
+                            </Header_homeScreen>
+                            <div className="memberships_expiring_list">
+                                {
+                                    filteredPersons?.length !== 0 ? filteredPersons?.map((person: any, index: any) =>
+                                        <Header_homeScreen key={index} tabla funcion={() => {
+                                            setDatos(person.id_cliente)
+                                            setDetallesForm(true);
 
 
-                                            }}>
-                                                <h3 style={{ fontWeight: "normal" }}>{person.nombre_cliente}</h3>
-                                                <h3 style={{ marginRight: "70px", fontWeight: "normal" }}>{person.fecha_fin}</h3>
-                                            </Header_homeScreen>
-                                        ) : <h3>Sin membresias asignadas a clientes</h3>
-                                    }
+                                        }}>
+                                            <h3 style={{ fontWeight: "normal" }}>{person.nombre_cliente}</h3>
+                                            <h3 style={{ marginRight: "70px", fontWeight: "normal" }}>{person.fecha_fin}</h3>
+                                        </Header_homeScreen>
+                                    ) : <h3>Sin membresias asignadas a clientes</h3>
+                                }
 
-                                </div>
-                                {totalPages > 1 ? (
-                                    <div className="pagination_container">
-                                        {currentPage > 1 && (
-                                            <button onClick={handlePrev}>
-                                                Anterior
-                                            </button>
-                                        )}
-
-                                        {currentPage < totalPages && (
-                                            <button onClick={handleNext}>
-                                                Siguiente
-                                            </button>
-                                        )}
-                                    </div>
-                                ) : null}
                             </div>
-                            <div className="estadisticas_clientes" />
-                        </div>
-                    </div> : <div className="spinner_container">
-                        <ImageComponent src={noPageFound} />
-                        <h3 style={{ color: "black" }}>No hay conexion con el servidor</h3>
-                    </div>
-        }
-        </>
-    }
+                            {totalPages > 1 ? (
+                                <div className="pagination_container">
+                                    {currentPage > 1 && (
+                                        <button onClick={handlePrev}>
+                                            Anterior
+                                        </button>
+                                    )}
 
+                                    {currentPage < totalPages && (
+                                        <button onClick={handleNext}>
+                                            Siguiente
+                                        </button>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                        <div className="estadisticas_clientes">
+                            <div className="metricas-1">
+                                <h3>CLIENTES NUEVOS</h3>
+                                <h1>{metricas?.mes_actual}</h1>
+                                {
+                                    metricas.mes_actual === 0 && metricas.mes_anterior === 0 ? null : <h4 style={{ color: metricas.crecimiento.includes('+') ? '#87fa87' : metricas.crecimiento.includes('-') ? 'red' : 'white' }}>{metricas.crecimiento}</h4>
+                                }
+                            </div>
+
+                            <div className="metricas-1">
+                                <h3>CLIENTES ACTIVOS</h3>
+                                <h1>{activo?.mes_actual}</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div> : <div className="spinner_container">
+                    <ImageComponent src={noPageFound} />
+                    <h3 style={{ color: "black" }}>No hay conexion con el servidor</h3>
+                </div>
+    }
+    </>
 }
+
 export default Home_screen;

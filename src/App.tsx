@@ -2,10 +2,10 @@ import { useState } from 'react'
 import './App.css'
 import MenuButton from './Components/Menu_Button'
 import Home_screen from './Pages/Home_screen';
-import Pagos from './Pages/Pagos';
 import Costos from './Pages/Costos';
 import Clientes from './Pages/Clientes_screen';
 import logoManriquez from './assets/Logo.png'
+import Estadisticas from './Pages/Estadisticas';
 function App() {
 
   const [selectedButton, setSelectedButton] = useState("HOME");
@@ -45,7 +45,7 @@ function App() {
         {selectedButton === "HOME" && <Home_screen/>}
         {selectedButton === "CLIENTES" && <Clientes/>}
         {selectedButton === "COSTOS" && <Costos/>}
-        {selectedButton == "PAGOS" && <Pagos/>}
+        {selectedButton == "PAGOS" && <Estadisticas/>}
       </div>
     </>
   )

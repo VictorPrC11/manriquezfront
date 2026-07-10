@@ -27,8 +27,9 @@ export const apiActualizarCliente = async (id:number, cliente:Cliente)=>{
 }
 
 export const apiEliminarCliente = async (id_cliente:number)=>{
-    const response = await axios.delete(`${API_URL}/clientes/eliminarCliente/${id_cliente}`);
-    return response.data;
+   
+    await axios.delete(`${API_URL}/clientes/eliminarCliente/${id_cliente}`);
+    return;
 }
 export const apiObtenerDetallesCliente = async(id_cliente:any)=>{
     const response = await axios.get(`${API_URL}/clientes/detallesCliente/${id_cliente}`)
@@ -41,5 +42,13 @@ export const apiObtenerPagosCliente = async (id_cliente:number)=>{
 
 export const apiVencimientoMembresiasClientes = async(parameters:any)=>{
     const response = await axios.post(`${API_URL}/clientes/vencimientoMembresias`, parameters)
+    return response.data
+}
+export const apiMetricasClientes = async ()=>{
+    const response = await axios.get(`${API_URL}/clientes/metricas`)
+    return response.data
+}
+export const apiClientesActivos = async ()=>{
+    const response = await axios.get(`${API_URL}/clientes/activos`)
     return response.data
 }

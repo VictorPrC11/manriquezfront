@@ -10,6 +10,7 @@ import type { Cliente } from "../model/clientes_model";
 import editar from '../assets/editar.png'
 import borrar from '../assets/borrar.png'
 import Pago_cliente from "./Pago_cliente";
+import { toast } from "sonner";
 
 
 
@@ -56,7 +57,7 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
                 membresia: res.data[0][0].membresia_activa ? res.data[0][0].nombre : "INACTIVA",
                 membresia_activa: res.data[0][0].membresia_activa,
                 inscripcion_activa: res.data[0][0].inscripcion_activa,
-                vencimiento_membresia: res.data[0][0].membresia_activa ? res.data[0][0].vencimiento_membresia : "SIN DATOS",
+                vencimiento_membresia: res.data[0][0].vencimiento_membresia,
                 vencimiento_inscripcion: res.data[0][0].inscripcion_activa ? res.data[0][0].vencimiento_inscripcion : "INACTIVA",
                 foto: res.data[0][0].foto ? `${URL_BASE}${res.data[0][0].foto}` : "undefined"
             }));
@@ -73,7 +74,7 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
                 await apiEliminarCliente(id_cliente);
                 onClose();
             } catch (error: any) {
-                alert(error.message);
+                toast.error(error)
             }
         }
     }
@@ -118,7 +119,7 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
         }} />
     }
     if (renewMembership) {
-        return <Pago_cliente typeScreen={typeRenew} cambio={() => {
+        return <Pago_cliente typeScreen={typeRenew!} cambio={() => {
             obtenerDatosCliente(cliente)
             setRenew(false)
         }} id_cliente={cliente} cliente={form} />
@@ -137,12 +138,12 @@ const Detalles_cliente = ({ cliente, onClose }: detallesClienteProps) => {
                     <div className='row-1'>
                         <CampoFormulario lectura labelName="Correo" name='correo' id='4' type='text' ancho={ancho1} value={form.correo} />
                         <CampoFormulario lectura labelName='Membresia' name='membresia' id='5' type='text' ancho={ancho} value={form.membresia} />
-                        <CampoFormulario lectura labelName='Vencimiento' name='vencimiento_membresia' id='6' type='text' ancho={ancho} value={form.vencimiento_membresia} />
+                        <CampoFormulario lectura labelName='Vencimiento' name='vencimiento_membresia' id='6' type= "date" ancho={ancho} value={form.vencimiento_membresia} />
                     </div>
                     <div className="separador" />
                     <div className='row-1'>
                         <CampoFormulario lectura labelName='Dirección' name='direccion' id='7' type='text' ancho={ancho1 + ancho + 20} value={form.direccion} />
-                        <CampoFormulario lectura labelName='Inscripción' name='vencimiento_inscripcion' id='8' type='text' ancho={ancho} value={form.vencimiento_inscripcion} />
+                        <CampoFormulario lectura labelName='Inscripción' name='vencimiento_inscripcion' id='8' type={form.vencimiento_inscripcion == "INACTIVA" ? "text" : "date"} ancho={ancho} value={form.vencimiento_inscripcion} />
                     </div>
                 </div>
                 <div style={{ width: "30px" }} />

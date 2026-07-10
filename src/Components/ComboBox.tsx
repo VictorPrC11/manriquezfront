@@ -74,7 +74,7 @@ const ComboBox = ({ listData, etiqueta, titulo, ancho, name, cambio, valor }: co
   }
   const options: OptionType[] = listData
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", flexDirection: "column" }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", flexDirection: "column"}}>
       <label style={{ color: "grey", fontSize: "20px", fontWeight: "lighter" }}>{titulo}</label>
       <div style={{ height: "8px" }} />
       <Select

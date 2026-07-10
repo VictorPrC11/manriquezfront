@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CampoFormulario from '../Components/campoFormulario';
 import { apiActualizarCliente, apiCrearCliente } from '../API/api_clientes';
 import Pago_cliente from './Pago_cliente';
-
+import { toast, Toaster } from 'sonner'
 interface RegistroClienteProps {
     cliente?: any;
     onClose?: () => void;
 }
 const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
+
+    const firstCheckRender = useRef(true)
     const [cobroScreen, setCobroScreen] = useState(false);
     const [idCliente, setIdCliente] = useState<any>(0);
     const [preview, setPreview] = useState<string | null>(null);
+    const [check, setCheck] = useState(false);
     const ancho = 300;
 
     const [form, setForm] = useState({
@@ -24,7 +27,6 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
         fecha_registro: '',
         foto: null as File | null
     });
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm({
@@ -97,37 +99,48 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
     const enviarForm = (e: any) => {
         e.preventDefault()
         const formulario_correcto = validarCampos();
-        if (formulario_correcto) {
-            const hoy = new Date();
-            const zonaHorariaOffset = hoy.getTimezoneOffset() * 60000;
-            const fechaFormateada = new Date(hoy.getTime() - zonaHorariaOffset).toISOString().split('T')[0];
+        if (!formulario_correcto) {
+            toast.error("Por favor completa los campos obligatorios")
+            return;
+        }
+        const hoy = new Date();
+        const zonaHorariaOffset = hoy.getTimezoneOffset() * 60000;
+        const fechaFormateada = new Date(hoy.getTime() - zonaHorariaOffset).toISOString().split('T')[0];
+
+        if (!check && form.fecha_registro === '') {
             form.fecha_registro = fechaFormateada;
-            if (formulario_correcto && !cliente && confirm("¿Los datos son correctos?")) {
-                const formData = new FormData();
-                Object.entries(form).forEach(([key, value]) => {
-                    if (value !== null) {
-                        formData.append(key, value);
-                    }
+        }
+        if (check && form.fecha_registro === '') {
+            toast.error("Debes seleccionar una fecha de registro anterior o desactivar la casilla para usar la fecha actual")
+            return;
+        }
+
+        if (!cliente) {
+            const formData = new FormData();
+            Object.entries(form).forEach(([key, value]) => {
+                if (value !== null) {
+                    formData.append(key, value);
+                }
+            });
+            apiCrearCliente(formData)
+                .then((res: any) => {
+                    toast.success("Cliente creado exitosamente");
+                    const id = Number(res.data);
+                    setIdCliente(id);
+                    setCobroScreen(true);
+                }
+                ).catch((error) => {
+                    toast.error(`Error al crear el cliente: ${error.message}`);
                 });
-                apiCrearCliente(formData)
-                    .then((res: any) => {
-                        alert("Cliente creado exitosamente");
-                        const id = Number(res.data);
-                        setIdCliente(id);
-                        setCobroScreen(true);
-                    }
-                    ).catch((error) => {
-                        alert(`Error al crear el cliente: ${error.message}`);
-                    });
-            }
         }
 
         if (cliente) {
             apiActualizarCliente(cliente.id_cliente, form).then(() => {
+                toast.success("Cliente actualizado exitosamente");
                 if (onClose) onClose();
             }
             ).catch((error) => {
-                alert(`Error al actualizar el cliente: ${error.message}`);
+                toast.error(`Error al actualizar el cliente: ${error.message}`);
             });
         }
 
@@ -148,18 +161,40 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             });
         }
     }, [cliente]);
+    useEffect(() => {
+        if (firstCheckRender.current) {
+            firstCheckRender.current = false;
+            console.log("Primer renderizado del check, no mostrar toast")
+            return;
+        }
+        if (check) {
+            toast("Fecha de registro anterior activada, no se registrará la fecha actual al guardar", {
+                description: "Asegúrate de ingresar la fecha de registro correcta en el campo correspondiente",
+                duration: 5000
+            })
+
+        } else {
+            toast("Fecha de registro anterior desactivada, se registrará la fecha actual al guardar", {
+                description: `El registro del cliente se realizará con la fecha actual ${new Date().toISOString().split('T')[0]}, asegúrate de activar la casilla si deseas usar una fecha de registro anterior`,
+                duration: 8000
+            })
+            setForm(prev => ({ ...prev, fecha_registro: '' }))
+        }
+    }, [check])
+
 
     if (cobroScreen) {
         return <Pago_cliente cambio={() => {
             if (onClose) {
                 onClose()
             }
-            
+
             setCobroScreen(false)
         }} cliente={form} id_cliente={idCliente!} typeScreen={"REGISTRO"} />
     }
 
     return <div className='Main-Container'>
+        <Toaster position='top-center' closeButton />
         {cliente ? <h1 style={{ marginBottom: "50px" }}>ACTUALIZACION DE CLIENTE</h1> : <h1 style={{ marginBottom: "50px" }}>REGISTRO DE CLIENTE</h1>}
         <form onSubmit={enviarForm}>
             <div className='contenedor-1'>
@@ -169,14 +204,30 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             </div>
             <div className='separador'></div>
             <div className='contenedor-2'>
-                <CampoFormulario labelName='Correo' name='correo' id='4' type='email' cambio={(e) => handleChange(e)} value={form.correo} />
+                {/*<CampoFormulario labelName='Correo' name='correo' id='4' type='email' cambio={(e) => handleChange(e)} value={form.correo} />*/}
+                <CampoFormulario labelName='Dirección' name='direccion' id='4' type='text' cambio={(e) => handleChange(e)} value={form.direccion} error={errors.direccion} />
                 <CampoFormulario labelName='Celular' name='celular' id='5' type='number' ancho={ancho} cambio={(e) => handleChange(e)} value={form.celular} error={errors.celular} />
                 <CampoFormulario labelName='Fecha de nacimiento*' name='fecha_nacimiento' id='6' type='date' ancho={ancho} cambio={(e) => handleChange(e)} error={errors.fecha_nacimiento} value={form.fecha_nacimiento} />
             </div>
             <div className='separador'></div>
             <div className='contenedor-3'>
-                <CampoFormulario labelName='Dirección' name='direccion' id='7' type='text' ancho={ancho + 300} cambio={(e) => handleChange(e)} value={form.direccion} error={errors.direccion} />
-                <CampoFormulario labelName='Foto' name='foto' id='8' type='file' ancho={ancho + 220} cambio={(e) => handleFileChange(e)} />
+                <CampoFormulario labelName='Foto' name='foto' id='7' type='file' ancho={ancho + 220} cambio={(e) => handleFileChange(e)} />
+                <input type="checkbox" style={{
+                    height: "22px",
+                    width: "22px",
+                    alignSelf:'center'
+                    , marginTop:"20px",
+                    marginLeft:"20px"
+                }} name='fechaAnterior' checked={check} onChange={(e) => {
+                    setCheck(e.target.checked)
+
+                }} />
+                {
+                    check ?
+                        <CampoFormulario labelName='Fecha de registro pasada' name='fecha_registro' id='9' type='date' ancho={ancho} cambio={(e) => handleChange(e)} value={form.fecha_registro} />
+                        : <span style={{ fontSize: "18px", color: "gray", alignSelf:'center', margin:"20px 60px 0px 0px"}}>¿Fecha de registro anterior?</span>
+                }
+                
             </div>
             <div style={{ marginTop: "40px", display: "flex", justifyContent: "center", width: "100%", flex: "1" }}>
                 <button type='button' className='cancel' onClick={() => {
@@ -185,6 +236,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
                 }}>Cancelar</button>
                 <button className='enviar-form' type='submit'>Guardar</button>
             </div>
+
         </form>
         {preview && (
             <div style={{ marginTop: "20px", textAlign: "center" }}>

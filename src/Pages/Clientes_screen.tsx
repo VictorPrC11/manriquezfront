@@ -59,11 +59,16 @@ const Clientes = () => {
         );
     }, [searchTerm, persons]);
 
-    const handleDelete = async (person: Cliente) => {
+    const handleDelete = async (person: any) => {
         if (person.id_cliente && confirm(`¿Eliminar a ${person.nombres} ${person.apellido_paterno} ${person.apellido_materno}?`)) {
             try {
                 await apiEliminarCliente(person.id_cliente);
-                setPersons(prev => prev?.filter(p => p.id_cliente !== person.id_cliente));
+                setCurrentPage(1)
+                const parameters = {
+                    p_pageSize: pageSize,
+                    p_offset: offset
+                }
+                obtenerDatos(parameters)
             } catch (error: any) {
                 alert(error.message);
             }
@@ -72,7 +77,6 @@ const Clientes = () => {
 
     if (view.mode === 'form') {
         return <RegistroCliente
-            cliente={view.data}
             onClose={() => {
                 setView({ mode: 'list' });
                 const parameters = {
@@ -84,14 +88,13 @@ const Clientes = () => {
         />;
     }
 
-    if(view.mode === 'details')
-    {
-        if(view.data !== undefined){
-           return <Detalles_cliente cliente={Number(view.data.id_cliente)} onClose={()=>setView({mode:'list'})}/>
+    if (view.mode === 'details') {
+        if (view.data !== undefined) {
+            return <Detalles_cliente cliente={Number(view.data.id_cliente)} onClose={() => setView({ mode: 'list' })} />
         }
     }
     if (loading) return <div className='spinner_container'><Spinner /></div>;
-    
+
     if (persons?.length === undefined) {
         return (
             <div className="spinner_container">
@@ -99,7 +102,7 @@ const Clientes = () => {
                 <h3 style={{ color: "black" }}>No hay conexión con el servidor o la lista está vacía</h3>
             </div>
         );
-    } 
+    }
     return (
         <div className="Screen_container">
             <div className="search_add_client_container">
@@ -127,14 +130,14 @@ const Clientes = () => {
                 {filteredPersons?.length !== 0 ?
                     filteredPersons?.map((person) => (
                         <Header_table_clients key={person.id_cliente}>
-                            <h3 style={{fontWeight:"normal"}}>{`${person.nombres} ${person.apellido_paterno} ${person.apellido_materno}`}</h3>
-                            <h3 style={{fontWeight:"normal"}}>{person.fecha_nacimiento}</h3>
+                            <h3 style={{ fontWeight: "normal" }}>{`${person.nombres} ${person.apellido_paterno} ${person.apellido_materno}`}</h3>
+                            <h3 style={{ fontWeight: "normal" }}>{person.fecha_nacimiento}</h3>
                             <div className='buttons_container'>
-                                <IconButton 
-                                icono={<img src={details} alt="View" />} 
-                                funcion={() => {
-                                    setView({mode:'details', data: person})
-                                }} />
+                                <IconButton
+                                    icono={<img src={details} alt="View" />}
+                                    funcion={() => {
+                                        setView({ mode: 'details', data: person })
+                                    }} />
                                 <IconButton
                                     icono={<img src={editar} alt="Edit" />}
                                     funcion={() => setView({ mode: 'form', data: person })}
@@ -147,6 +150,7 @@ const Clientes = () => {
                         </Header_table_clients>
                     )) : <h1>SIN CLIENTES REGISTRADOS</h1>}
             </div>
+            <div className='separador'/>
             {totalPages > 1 ? (
                 <div className="pagination_container">
                     {currentPage > 1 && (

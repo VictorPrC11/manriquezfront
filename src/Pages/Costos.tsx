@@ -7,7 +7,7 @@ import Registro_membresia from "./Registro_membresia";
 import Spinner from "../Components/spinner";
 import ImageComponent from "../Components/imageComponent";
 import noPageFound from "../assets/page-not-found.png";
-
+import editIcon from '../assets/editar.png'
 const Costos = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -15,22 +15,31 @@ const Costos = () => {
     const [agregarMembresia, setAgregarMembresia] = useState(false); 
     const [formActualizar, setFormActualizar]= useState(false);
     const [datosMembresia, setDatosMembresia] = useState<Membresia | undefined>()
-    useEffect(() => {
-        apiObtenerMembresias().then((res: any) => {
+    const obtenerDatos = ()=>{
+         apiObtenerMembresias().then((res: any) => {
             setMembresias(res.data[0]);
         }).catch(error => {
             console.warn(`Error al obtener los pagos: ${error.message}`);
         }).finally(() => setLoading(false));
+    }
+    useEffect(() => {
+       obtenerDatos()
     }, []);
 
     const filteredMembresias = membresias?.filter((p) => 
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     )  ;
     if(formActualizar){
-        return <Registro_membresia onClose={()=>setFormActualizar(false)} membresiaData={datosMembresia}/>
+        return <Registro_membresia onClose={()=>{
+            setFormActualizar(false)
+            obtenerDatos()
+        }} membresiaData={datosMembresia}/>
     }
     if (agregarMembresia) {
-        return <Registro_membresia onClose={()=>setAgregarMembresia(false)}/>
+        return <Registro_membresia onClose={()=>{
+            setAgregarMembresia(false)
+            obtenerDatos()
+        }}/>
     }
 
     return loading ? <div className="spinner_container"><Spinner /></div> :
@@ -61,7 +70,7 @@ const Costos = () => {
                         
                         <div className='buttons_container'>
                              <IconButton 
-                                icono={<img src={'src/assets/editar.png'} />} 
+                                icono={<img src={editIcon} />} 
                                 funcion={() => {
                                     setDatosMembresia(m);
                                     setFormActualizar(true)

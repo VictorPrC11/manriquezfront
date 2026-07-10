@@ -8,6 +8,7 @@ import { api_generaPago } from "../API/api_pagos";
 import type { Pago } from "../model/pago";
 import type { MembresiaCliente } from "../model/membresias_cliente";
 import { apiActualizarInscripcionCliente, apiActualizarMembresiaCliente, apiCrearMembresiaCliente } from '../API/api_membresias_clientes';
+import { toast, Toaster } from "sonner";
 interface OptionType {
     value: string;
     label: string;
@@ -21,11 +22,6 @@ interface PagoProp {
 }
 
 const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
-    const hoy = new Date();
-    const fechaInicio =
-        hoy.getFullYear() + '-' +
-        String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
-        String(hoy.getDate()).padStart(2, '0');
 
     const [costoMembresia, setCostoMembresia] = useState(0)
     const [costoInscripcion, setCostoInscripcion] = useState(0)
@@ -39,10 +35,10 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
     const ancho = 250;
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setDatos({
-            ...datos,        // Copia lo que ya estaba en el form
-            [name]: value   // Actualiza solo el campo que cambió
-        });
+        setDatos(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
     const [datos, setDatos] = useState(
         {
@@ -50,6 +46,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
             nombres: "",
             apellido_paterno: "",
             apellido_materno: "",
+            fecha_inicio: "",
             inscripcion: "",
             membresia: "",
             metodoPago: "",
@@ -60,10 +57,10 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         }
     )
     const handleSelectChange = (name: string, selection: SingleValue<OptionType>) => {
-        setDatos({
-            ...datos,
+        setDatos(prev => ({
+            ...prev,
             [name]: selection ? selection.value : ""
-        });
+        }));
     };
 
     useEffect(() => {
@@ -75,13 +72,13 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
             })))
 
         }).catch(error => {
-            alert(`Error al obtener membresias: ${error.message}`);
+            toast.error(`Error al obtener membresias: ${error.message}`);
         });
         apiObtenerInscripcion().then((res: any) => {
             setDatosInscripcion(res.data[0])
         }
         ).catch(error => {
-            alert(`Error al obtener inscripcion: ${error.message}`);
+            toast.error(`Error al obtener inscripcion: ${error.message}`);
         }
         );
     }, [])
@@ -92,7 +89,9 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                 id_cliente: id_cliente,
                 nombres: cliente.nombres.trim(),
                 apellido_paterno: cliente.apellido_paterno.trim(),
-                apellido_materno: cliente.apellido_materno.trim()
+                apellido_materno: cliente.apellido_materno.trim(),
+                fecha_inicio: cliente.fecha_registro
+
             }))
         }
     }, [])
@@ -145,7 +144,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         const membresiaCliente: MembresiaCliente = {
             id_cliente: Number(datos.id_cliente),
             id_membresia: Number(duracion_membresia!.id_membresia),
-            fecha_inicio: fechaInicio,
+            fecha_inicio: datos.fecha_inicio,
             pagado: 1,
             activa: 1
         }
@@ -156,17 +155,17 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         const inscripcion: any = {
             id_cliente: Number(datos.id_cliente),
             nombre_membresia: "INSCRIPCION",
-            fecha_inicio: fechaInicio,
+            fecha_inicio: datos.fecha_inicio,
         }
         return inscripcion
     }
 
     const enviarForm = () => {
         if (!datos.membresia && (datos.inscripcion !== "PAGADO" && datos.inscripcion !== "GRATIS")) {
-            alert("Debe seleccionar una membresia o pagar la inscripcion para generar el pago");
+            toast.error("Debe seleccionar una membresia o pagar la inscripcion para generar el pago");
             return;
         }
-        if (confirm("Desea registrar el cobro?")) {
+        
             const pagoGenerado: Pago = {
                 tipo: datos.tipo,
                 notas: datos.Notas,
@@ -207,11 +206,12 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                 }
                 cambio()
             }
-        }
+        
 
     }
     return <div className="contenedor_pantalla_pago">
         <div className="contenedor_principal">
+            <Toaster position="top-center"></Toaster>
             <h1 style={{ marginBottom: "50px" }}>REGISTRO DE PAGO</h1>
             <form></form>
             <div className="contenedor-pago">
@@ -227,7 +227,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                             listData={opcionesInscripciones}
                             etiqueta='Inscripcion'
                             titulo="Inscripcion"
-                            ancho />
+                             />
                         : typeScreen === "RENOVACION_MEMBRESIA" ?
                             <ComboBox cambio={(valor) => {
                                 manejarCambioMembresia(valor)
@@ -237,7 +237,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                                 listData={opcionesMembresias}
                                 etiqueta='Membresia'
                                 titulo="Tipo de membresia"
-                                ancho /> :
+                                 /> :
                             <>
                                 <ComboBox cambio={(valor) => {
                                     manejarCambioInscripcion(valor)

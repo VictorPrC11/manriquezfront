@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import Header_table_clients from '../Components/Header_table_clients';
 import { api_obtenerPagos } from '../API/api_pagos';
-import type { Pago } from '../model/pago';
 import Spinner from '../Components/spinner';
 import ImageComponent from '../Components/imageComponent';
 import noPageFound from '../assets/page-not-found.png'
 const Pagos = ()=>{
     const [searchTerm, setSearchTerm] = useState('');
-    const [pagos, setPagos] = useState<Pago[]>();
+    const [pagos, setPagos] = useState<any[]>();
     const [loading, setLoading] = useState(true)
     useEffect(() => {
         api_obtenerPagos().then((res: any) => {
@@ -20,7 +19,7 @@ const Pagos = ()=>{
     }, []);
 
     const filteredPagos = pagos?.filter((p) => 
-    p.metodo_pago.toLowerCase().includes(searchTerm.toLowerCase())
+    p.nombre_cliente.toLowerCase().includes(searchTerm.toLowerCase())
     )  ;
 
     
@@ -31,31 +30,32 @@ const Pagos = ()=>{
     }
     return pagos?.length !== undefined ?  <div className="Screen_container">
             <div className="search_add_client_container">
-                <input type="text" placeholder="Busqueda de pago por metodo de pago" className="search_client_input_screen" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                <button className="add_client" onClick={() => {
+                <input type="text" placeholder="Busqueda de cliente" className="search_client_input_screen" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                {/*<button className="add_client" onClick={() => {
                     //setGenerarPagoForm(true)
                     window.location.reload()
                 }}>
                     <span className="texto_add_cliente">GENERAR PAGO</span>
-                </button>
-            </div>
+                </button>*/
+            }            </div>
             <div className='header_estatico'>
                 <Header_table_clients estatico>
-                    <h1>Id cliente</h1>
+                    <h1>Nombre</h1>
                     <h1>Monto</h1>
                     <h1>Tipo</h1>
-                    <div style={{ width: "20%" }} />
+                    <h1>Fecha</h1>
+                   
                 </Header_table_clients>
             </div>
             <div className="table_clients_container">
                 {
                     pagos.length!== 0 ? filteredPagos?.map((pagos) => (
                     <Header_table_clients key={pagos.id_pago}>
-                        <h3 style={{fontWeight:"normal"}}>{pagos.id_cliente}</h3>
+                        <h3 style={{fontWeight:"normal"}}>{pagos.nombre_cliente}</h3>
                         <h3 style={{fontWeight:"normal"}}>{pagos.monto}</h3>
                         <h3 style={{fontWeight:"normal"}}>{pagos.tipo}</h3>
-                        <div className='buttons_container'>
-                        </div>
+                        <h3 style={{fontWeight:"normal"}}>{pagos.fecha_pago}</h3>
+                       
                     </Header_table_clients>
                 )) : <h3>No existen pagos realizados</h3>
 
