@@ -5,7 +5,7 @@ import Home_screen from './Pages/Home_screen';
 import Costos from './Pages/Costos';
 import Clientes from './Pages/Clientes_screen';
 import logoManriquez from './assets/Logo.png'
-import Estadisticas from './Pages/Estadisticas';
+import Pagos from './Pages/Pagos';
 function App() {
 
   const [selectedButton, setSelectedButton] = useState("HOME");
@@ -45,7 +45,7 @@ function App() {
         {selectedButton === "HOME" && <Home_screen/>}
         {selectedButton === "CLIENTES" && <Clientes/>}
         {selectedButton === "COSTOS" && <Costos/>}
-        {selectedButton == "PAGOS" && <Estadisticas/>}
+        {selectedButton == "PAGOS" && <Pagos/>}
       </div>
     </>
   )

@@ -9,19 +9,20 @@ import type { Pago } from "../model/pago";
 import type { MembresiaCliente } from "../model/membresias_cliente";
 import { apiActualizarInscripcionCliente, apiActualizarMembresiaCliente, apiCrearMembresiaCliente } from '../API/api_membresias_clientes';
 import { toast, Toaster } from "sonner";
+import { actualizarVigenciaTerminal, agregarUsuarioTerminal } from '../API/api_terminal'
 interface OptionType {
     value: string;
     label: string;
 }
 type TypeOperation = "RENOVACION_MEMBRESIA" | "RENOVACION_INSCRIPCION" | "REGISTRO" | "RENOVACION_MI" | undefined;
 interface PagoProp {
-   typeScreen : TypeOperation;
+    typeScreen: TypeOperation;
     cambio: () => void;
     cliente?: any;
     id_cliente: number;
 }
 
-const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
+const Pago_cliente = ({ cambio, cliente, id_cliente, typeScreen }: PagoProp) => {
 
     const [costoMembresia, setCostoMembresia] = useState(0)
     const [costoInscripcion, setCostoInscripcion] = useState(0)
@@ -83,6 +84,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         );
     }, [])
     useEffect(() => {
+
         if (cliente) {
             setDatos((prev) => ({
                 ...prev,
@@ -90,7 +92,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                 nombres: cliente.nombres.trim(),
                 apellido_paterno: cliente.apellido_paterno.trim(),
                 apellido_materno: cliente.apellido_materno.trim(),
-                fecha_inicio: cliente.fecha_registro
+                fecha_inicio: cliente.fecha_registro ? cliente.fecha_registro : new Date().toLocaleDateString('en-CA')
 
             }))
         }
@@ -141,6 +143,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
     };
     const registrarMembresiaCliente = () => {
         const duracion_membresia = membresias.find(opt => opt.nombre === datos.membresia)
+
         const membresiaCliente: MembresiaCliente = {
             id_cliente: Number(datos.id_cliente),
             id_membresia: Number(duracion_membresia!.id_membresia),
@@ -160,53 +163,73 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
         return inscripcion
     }
 
-    const enviarForm = () => {
+    const enviarForm = async () => {
         if (!datos.membresia && (datos.inscripcion !== "PAGADO" && datos.inscripcion !== "GRATIS")) {
             toast.error("Debe seleccionar una membresia o pagar la inscripcion para generar el pago");
             return;
         }
-        
-            const pagoGenerado: Pago = {
-                tipo: datos.tipo,
-                notas: datos.Notas,
-                id_cliente: Number(datos.id_cliente),
-                monto: datos.Total,
-                metodo_pago: datos.metodoPago
+
+        const pagoGenerado: Pago = {
+            tipo: datos.tipo,
+            notas: datos.Notas,
+            id_cliente: Number(datos.id_cliente),
+            monto: datos.Total,
+            metodo_pago: datos.metodoPago
+        }
+        const membresiaData = membresias.find(opt => opt.nombre === datos.membresia)
+        const fechaFinal = calcularFechaFin(new Date(), membresiaData?.duracion, membresiaData!.unidad)
+        const fechaInicio = `${new Date().toISOString().slice(0, 10)}T00:00:00`
+
+        const usuario = {
+            'usuario': {
+                'nombre': `${cliente.nombres} ${cliente.apellido_paterno} ${cliente.apellido_materno}`,
+                'id': id_cliente,
+                'fechaInicio': fechaInicio,
+                'fechaFinal': fechaFinal,
+                'image': cliente.foto
             }
-            if (typeScreen === "RENOVACION_MEMBRESIA") {
-                const generarMembresiaCliente = registrarMembresiaCliente();
-                apiActualizarMembresiaCliente(generarMembresiaCliente).then(() => {
-                    api_generaPago(pagoGenerado);
-                    cambio()
-                }).catch((error) => {
-                    alert(`Error al renovar membresia: ${error.message}`);
-                });
-            }
-            if (typeScreen === "RENOVACION_INSCRIPCION") {
-                const generarInscripcion = registrarInscripcion();
-                apiActualizarInscripcionCliente(generarInscripcion).then(() => {
-                    api_generaPago(pagoGenerado);
-                    cambio()
-                }
-                ).catch((error) => {
-                    alert(`Error al renovar inscripcion: ${error.message}`);
-                }
-                );
-            }
-            if (typeScreen === "REGISTRO" || typeScreen === "RENOVACION_MI") {
-                const generarMembresiaCliente = registrarMembresiaCliente();
-                const generarInscripcion = registrarInscripcion();
-                api_generaPago(pagoGenerado);
-                apiCrearMembresiaCliente(generarMembresiaCliente)
-                if (datos.inscripcion === "PAGADO" || datos.inscripcion === "GRATIS") {
-                    apiCrearInscripcion(generarInscripcion)
-                    
-                }else{
-                    apiRegistrarClienteTBInscripciones(generarInscripcion);
-                }
+
+        }
+        if (typeScreen === "RENOVACION_MEMBRESIA") {
+            const generarMembresiaCliente = await registrarMembresiaCliente();
+            await apiActualizarMembresiaCliente(generarMembresiaCliente).then(async () => {
+                await api_generaPago(pagoGenerado);
+                await actualizarVigenciaTerminal(usuario)
+                cambio()
+            }).catch((error) => {
+                alert(`Error al renovar membresia: ${error.message}`);
+            });
+        }
+        if (typeScreen === "RENOVACION_INSCRIPCION") {
+            const generarInscripcion = await registrarInscripcion();
+            console.log(generarInscripcion)
+            await apiActualizarInscripcionCliente(generarInscripcion).then(async () => {
+                await api_generaPago(pagoGenerado);
                 cambio()
             }
-        
+            ).catch((error) => {
+                alert(`Error al renovar inscripcion: ${error.message}`);
+            }
+            );
+        }
+        if (typeScreen === "REGISTRO" || typeScreen === "RENOVACION_MI") {
+            const generarMembresiaCliente = await registrarMembresiaCliente();
+            const generarInscripcion = await registrarInscripcion();
+            console.log(generarInscripcion)
+            await apiCrearMembresiaCliente(generarMembresiaCliente)
+
+
+
+            if (datos.inscripcion === "PAGADO" || datos.inscripcion === "GRATIS") {
+                await apiCrearInscripcion(generarInscripcion)
+            } else {
+                await apiRegistrarClienteTBInscripciones(generarInscripcion);
+            }
+            await agregarUsuarioTerminal(usuario)
+            await api_generaPago(pagoGenerado);
+            cambio()
+        }
+
 
     }
     return <div className="contenedor_pantalla_pago">
@@ -227,7 +250,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                             listData={opcionesInscripciones}
                             etiqueta='Inscripcion'
                             titulo="Inscripcion"
-                             />
+                        />
                         : typeScreen === "RENOVACION_MEMBRESIA" ?
                             <ComboBox cambio={(valor) => {
                                 manejarCambioMembresia(valor)
@@ -237,7 +260,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
                                 listData={opcionesMembresias}
                                 etiqueta='Membresia'
                                 titulo="Tipo de membresia"
-                                 /> :
+                            /> :
                             <>
                                 <ComboBox cambio={(valor) => {
                                     manejarCambioInscripcion(valor)
@@ -274,7 +297,7 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
             </div>
             <div className="separador"></div>
             <div className="contenedor-pago" style={{ justifyContent: "flex-end", marginRight: "15px" }}>
-                {typeScreen==='RENOVACION_INSCRIPCION' || typeScreen==='RENOVACION_MEMBRESIA' || typeScreen === 'RENOVACION_MI' ? <button type='button' className='cancel' style={{width: '100px'}} onClick={cambio}>Cancelar</button> : null}
+                {typeScreen === 'RENOVACION_INSCRIPCION' || typeScreen === 'RENOVACION_MEMBRESIA' || typeScreen === 'RENOVACION_MI' ? <button type='button' className='cancel' style={{ width: '100px' }} onClick={cambio}>Cancelar</button> : null}
                 <button type="button" className="enviar-form" style={{ width: "100px" }} onClick={() => enviarForm()}>Cobrar</button>
             </div>
         </div>
@@ -282,3 +305,25 @@ const Pago_cliente = ({ cambio, cliente, id_cliente,typeScreen}: PagoProp) => {
 }
 
 export default Pago_cliente
+
+function calcularFechaFin(fechaInicio: any, cantidad: any, unidad: String) {
+    const fecha = new Date(fechaInicio);
+
+    switch (unidad) {
+        case 'DAY':
+            fecha.setDate(fecha.getDate() + cantidad);
+            break;
+        case 'MONTH':
+            fecha.setMonth(fecha.getMonth() + cantidad);
+            break;
+        case 'YEAR':
+            fecha.setFullYear(fecha.getFullYear() + cantidad);
+            break;
+        case 'WEEK':
+            fecha.setDate(fecha.getDate() + cantidad * 7);
+            break;
+        default:
+            throw new Error(`Unidad no soportada: ${unidad}`);
+    }
+    return `${fecha.toISOString().slice(0, 10)}T00:00:00`;
+}

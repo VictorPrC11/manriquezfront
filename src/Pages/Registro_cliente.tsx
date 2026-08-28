@@ -15,7 +15,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
     const [preview, setPreview] = useState<string | null>(null);
     const [check, setCheck] = useState(false);
     const ancho = 300;
-
+    const [dataResponseClient, setDataResponseClient] = useState([])
     const [form, setForm] = useState({
         nombres: ''.trim(),
         apellido_paterno: ''.trim(),
@@ -125,7 +125,8 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             apiCrearCliente(formData)
                 .then((res: any) => {
                     toast.success("Cliente creado exitosamente");
-                    const id = Number(res.data);
+                    const id = Number(res.data.id_cliente);
+                    setDataResponseClient(res.data)
                     setIdCliente(id);
                     setCobroScreen(true);
                 }
@@ -190,7 +191,7 @@ const RegistroCliente = ({ onClose, cliente }: RegistroClienteProps) => {
             }
 
             setCobroScreen(false)
-        }} cliente={form} id_cliente={idCliente!} typeScreen={"REGISTRO"} />
+        }} cliente={dataResponseClient} id_cliente={idCliente!} typeScreen={"REGISTRO"} />
     }
 
     return <div className='Main-Container'>
